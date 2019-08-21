@@ -2,30 +2,9 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
 
-ext {
-    bintrayRepo = 'maven'
-    bintrayName = 'jsoncake'
-
-    publishedGroupId = 'com.ray650128.circleprogressbar'
-    libraryName = 'JsonCake'
-    artifact = 'jsoncake'
-
-    libraryDescription = 'A ProgressBar with ring style.'
-
-    siteUrl = 'https://github.com/ray650128/CircleProgressBar'
-    gitUrl = 'https://github.com/ray650128/CircleProgressBar.git'
-
-    libraryVersion = '1.0.0'
-
-    developerId = 'ray650128'
-    developerName = 'Raymond Yang'
-    developerEmail = 'ray650128@gmail.com'
-
-    licenseName = 'The Apache Software License, Version 2.0'
-    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-    allLicenses = ["Apache-2.0"]
-}
+version = "1.0.0" // 版本號
 
 android {
     compileSdkVersion 28
@@ -64,8 +43,72 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
-repositories {
-    mavenCentral()
+
+def siteUrl = 'https://github.com/ray650128/CircleProgressBar'    // Git專案主頁
+def gitUrl = 'https://github.com/ray650128/CircleProgressBar.git' // Git倉庫url
+group = "com.ray650128.circleprogressbar" // 一般為包名
+def libName = "CircleProgressBar"
+version = "1.0.0"
+install {
+    repositories.mavenInstaller {
+// 生成POM.xml
+        pom {
+            project {
+                packaging 'aar'
+                name '一個圓形的進度條' // 專案描述
+                url siteUrl
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer { // 開發者個人資訊
+                        id 'ray650128'
+                        name 'Raymond Yang'
+                        email 'ray650128@gmail.com'
+                    }
+                }
+                scm {
+                    connection gitUrl
+                    developerConnection gitUrl
+                    url siteUrl
+                }
+            }
+        }
+    }
 }
-apply from: 'https://raw.githubusercontent.com/attwellBrian/JCenter/master/installv1.gradle'
-apply from: 'https://raw.githubusercontent.com/attwellBrian/JCenter/master/bintrayv1.gradle'
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+task javadoc(type: Javadoc) {
+    options.encoding = "UTF-8" // 設定編碼，否則中文可能會提示出錯
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+bintray {
+    user = "ray650128"
+    key = "8f8a2e20465d39b59b0a0bf3cdc336b59c7670b6"
+    configurations = ['archives']
+    pkg {
+        userOrg = "ray650128"
+        repo = "CircleProgressBar" // 釋出到Maven庫
+        name = "CircleProgressBar" // 釋出到JCenter上的專案名字
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = ["Apache-2.0"]
+        publish = true
+    }
+}
